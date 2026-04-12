@@ -1,0 +1,21 @@
+{
+  "name": "EDA Full Stack Dev Container",
+  "dockerComposeFile": [
+    "docker-compose.yml"
+  ],
+  "service": "backend-dev",
+  "workspaceFolder": "/workspace",
+  "forwardPorts": [5173, 8000],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "svelte.svelte-vscode",
+        "ms-azuretools.vscode-docker",
+        "redhat.vscode-yaml"
+      ]
+    }
+  },
+  "postCreateCommand": "bash -lc 'pip install --no-cache-dir -r backend/requirements.txt && npm --prefix frontend install'"
+}
