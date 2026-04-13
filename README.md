@@ -16,6 +16,8 @@ El flujo recomendado para usuarios externos es desplegar imágenes preconstruida
 - Docker Engine / Docker Desktop
 - Docker Compose v2
 
+Las imágenes publicadas en GHCR son **multi-arquitectura** (`linux/amd64` y `linux/arm64`): funcionan en Mac Intel, Apple Silicon, Linux x86_64 y ARM64 sin depender del SO del host.
+
 ### 1. Definir imágenes y tag
 
 ```bash
