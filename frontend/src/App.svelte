@@ -15,6 +15,9 @@
   let step2Timeout = null
   let logLines = []
   let logId = 0
+  let notificaciones = []
+  let cargandoNotifs = false
+  let errorNotifs = ''
 
   // Adjust timing (ms) to speed up the demo — lower = faster
   const STEP2_DELAY = 1500
@@ -38,7 +41,24 @@
       mensajePedido = 'No se pudo conectar con el servidor. ¿Está el backend en ejecución?'
       mensajeTipo = 'err'
     }
+    await cargarNotificaciones()
   })
+
+  async function cargarNotificaciones() {
+    cargandoNotifs = true
+    errorNotifs = ''
+    try {
+      const r = await fetch('/notificaciones')
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      notificaciones = await r.json()
+    } catch (e) {
+      console.error('No se pudieron cargar las notificaciones:', e)
+      errorNotifs = 'No se pudo consultar Redis.'
+      notificaciones = []
+    } finally {
+      cargandoNotifs = false
+    }
+  }
 
   onDestroy(() => {
     clearInterval(pollingInterval)
@@ -115,6 +135,7 @@
             edaStep = 3
             clearInterval(pollingInterval)
             clearTimeout(step2Timeout)
+            cargarNotificaciones()
             setTimeout(() => {
               if (edaStep === 3) edaStep = 4
             }, 700)
@@ -258,6 +279,49 @@
 
         {#if mensajePedido}
           <p class="msg {mensajeTipo}">{mensajePedido}</p>
+        {/if}
+      </div>
+
+      <!-- Notificaciones Redis -->
+      <div class="panel notif-panel">
+        <div class="notif-header">
+          <h2 class="section-title notif-title">Notificaciones (Redis)</h2>
+          <button
+            type="button"
+            class="btn-refresh"
+            on:click={cargarNotificaciones}
+            disabled={cargandoNotifs}
+            title="Actualizar lista"
+          >
+            {cargandoNotifs ? '…' : '\u21BB'}
+          </button>
+        </div>
+        {#if errorNotifs}
+          <p class="notif-err">{errorNotifs}</p>
+        {:else if notificaciones.length === 0}
+          <p class="notif-empty">
+            {cargandoNotifs ? 'Cargando…' : 'No hay notificaciones guardadas (o ya expiraron).'}
+          </p>
+        {:else}
+          <ul class="notif-list">
+            {#each notificaciones as n (n.pedido_id)}
+              <li class="notif-item">
+                <span class="notif-id" title={n.pedido_id}>{n.pedido_id.slice(0, 8)}…</span>
+                <span class="notif-msg">{n.mensaje}</span>
+                <span class="notif-meta">
+                  <span class="notif-estado">{n.estado ?? '—'}</span>
+                  {#if n.created_at}
+                    <time class="notif-time" datetime={n.created_at}>
+                      {new Date(n.created_at).toLocaleString('es-CO', {
+                        dateStyle: 'short',
+                        timeStyle: 'medium',
+                      })}
+                    </time>
+                  {/if}
+                </span>
+              </li>
+            {/each}
+          </ul>
         {/if}
       </div>
 
@@ -637,6 +701,110 @@
 
   .msg.ok  { background: #ecfdf5; color: #065f46; }
   .msg.err { background: #fef2f2; color: #991b1b; }
+
+  /* ── Notificaciones panel ──────────────────────────────── */
+  .notif-panel .section-title { margin-bottom: 0; }
+
+  .notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .notif-title {
+    font-size: 0.95rem;
+    flex: 1;
+  }
+
+  .btn-refresh {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--primary);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .btn-refresh:hover:not(:disabled) {
+    background: var(--primary-light);
+    border-color: #fad3be;
+  }
+
+  .btn-refresh:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .notif-err {
+    font-size: 0.78rem;
+    color: #991b1b;
+    background: #fef2f2;
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .notif-empty {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-align: center;
+    padding: 0.5rem 0;
+  }
+
+  .notif-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .notif-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.55rem 0.65rem;
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+  }
+
+  .notif-id {
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .notif-msg {
+    color: var(--text);
+    line-height: 1.35;
+  }
+
+  .notif-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.75rem;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+
+  .notif-estado {
+    text-transform: capitalize;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .notif-time { font-variant-numeric: tabular-nums; }
 
   /* ── Log wrapper ───────────────────────────────────────── */
   .log-wrapper {

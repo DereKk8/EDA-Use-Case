@@ -9,7 +9,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.kafka_producer import publicar_pedido, start_producer, stop_producer
 from app.models import Pedido, PedidoCreate, Producto
-from app.redis_client import guardar_pedido, obtener_notificacion, obtener_pedido
+from app.redis_client import (
+    guardar_pedido,
+    obtener_notificacion,
+    obtener_pedido,
+    obtener_todas_notificaciones,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -68,3 +73,8 @@ async def consultar_pedido(pedido_id: str):
         raise HTTPException(status_code=404, detail="Pedido no encontrado")
     pedido["notificacion"] = obtener_notificacion(pedido_id)
     return pedido
+
+
+@app.get("/notificaciones")
+async def listar_notificaciones():
+    return obtener_todas_notificaciones()

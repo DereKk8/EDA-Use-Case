@@ -9,8 +9,9 @@ export default defineConfig({
     port: 5173,
     host: '0.0.0.0',
     proxy: {
-      '/pedidos':   apiProxyTarget,
-      '/productos': apiProxyTarget,
+      '/pedidos': apiProxyTarget,
+      '/productos':      apiProxyTarget,
+      '/notificaciones': apiProxyTarget,
     }
   }
 })

@@ -37,3 +37,23 @@ def guardar_notificacion(notif: Notificacion) -> None:
 def obtener_notificacion(pedido_id: str) -> dict | None:
     data = get_redis().get(f"notificacion:{pedido_id}")
     return json.loads(data) if data else None
+
+
+def obtener_todas_notificaciones() -> list[dict]:
+    """Lista todas las claves notificacion:* (SCAN, no bloquea el servidor)."""
+    r = get_redis()
+    out: list[dict] = []
+    cursor = 0
+    while True:
+        cursor, keys = r.scan(cursor=cursor, match="notificacion:*", count=100)
+        for key in keys:
+            data = r.get(key)
+            if data:
+                try:
+                    out.append(json.loads(data))
+                except json.JSONDecodeError:
+                    logger.warning("Valor JSON inválido en %s", key)
+        if cursor == 0:
+            break
+    out.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return out
