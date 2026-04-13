@@ -11,7 +11,7 @@ RUN addgroup --system app && adduser --system --ingroup app app
 COPY backend/requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY app /app/app
+COPY backend/app /app/app
 
 RUN chown -R app:app /app
 

@@ -71,6 +71,25 @@ El patrón EDA desacopla los componentes de tu aplicación con eventos asíncró
 
 Este repositorio publica imágenes en GHCR automáticamente cuando hay push a la rama principal.
 
+### Despliegue con imagenes GHCR (produccion)
+
+Ejecuta estos comandos desde la raiz del repositorio (la carpeta donde estan `README.md` y `docker-compose.prod.yml`):
+
+```bash
+cd /ruta/a/EDA
+
+export BACKEND_IMAGE=ghcr.io/<owner>/<repo-backend>
+export FRONTEND_IMAGE=ghcr.io/<owner>/<repo-frontend>
+export IMAGE_TAG=latest
+
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Nota importante: el archivo de produccion esta en la raiz del proyecto. Si usas una ruta como `.devcontainer/docker-compose.prod.yml`, fallara porque ese archivo no existe en esa carpeta.
+
+---
+
 ### Prerrequisitos
 
 - Docker Engine o Docker Desktop
@@ -137,7 +156,7 @@ docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.ym
 4. En una segunda terminal, iniciar el worker manualmente:
 
 ```bash
-cd /workspace && python app/worker.py
+cd /workspace/backend && python -m app.worker
 ```
 
 ---
@@ -167,7 +186,7 @@ docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.ym
 
 **Terminal 2 (Worker):**
 ```bash
-cd /workspace && python app/worker.py
+cd /workspace/backend && python -m app.worker
 ```
 
 **Terminal 3 (Cliente):**
@@ -212,7 +231,7 @@ Notificacion guardada para pedido XXXXXXX-XXXX-...
 
 ```bash
 # TERMINAL 1: Producción de eventos
-cd /workspace && python app/worker.py
+cd /workspace/backend && python -m app.worker
 
 # Verás:
 # Worker iniciado, escuchando topic 'pedidos'...
@@ -248,14 +267,6 @@ curl -X POST http://localhost:8000/pedidos \
 
 ```
 /workspace/
-├── app/                          ← Paquete Python para FastAPI
-│   ├── __init__.py               ← Marca como paquete Python
-│   ├── models.py                 ← Entidades Pydantic (Producto, Pedido, Notificación)
-│   ├── main.py                   ← FastAPI app + endpoints REST
-│   ├── redis_client.py           ← Funciones para guardar/leer de Redis
-│   ├── kafka_producer.py         ← Iniciar producer de Kafka, publicar eventos
-│   └── worker.py                 ← Consumer de Kafka (motor EDA)
-│
 ├── frontend/
 │   ├── package.json              ← Scripts y dependencias Node
 │   ├── Dockerfile                ← Imagen productiva del frontend
@@ -267,8 +278,15 @@ curl -X POST http://localhost:8000/pedidos \
 │       └── App.svelte            ← Componente root (catálogo + carrito + consultas)
 │
 ├── backend/
-│   ├── requirements.txt           ← Dependencias Python
-│   └── Dockerfile                 ← Imagen productiva backend/worker
+│   ├── app/                        ← Paquete Python para FastAPI
+│   │   ├── __init__.py             ← Marca como paquete Python
+│   │   ├── models.py               ← Entidades Pydantic (Producto, Pedido, Notificación)
+│   │   ├── main.py                 ← FastAPI app + endpoints REST
+│   │   ├── redis_client.py         ← Funciones para guardar/leer de Redis
+│   │   ├── kafka_producer.py       ← Iniciar producer de Kafka, publicar eventos
+│   │   └── worker.py               ← Consumer de Kafka (motor EDA)
+│   ├── requirements.txt            ← Dependencias Python
+│   └── Dockerfile                  ← Imagen productiva backend/worker
 │
 ├── .devcontainer/
 │   ├── devcontainer.json         ← Configuración VS Code Dev Container
@@ -314,7 +332,7 @@ npm install
 - Debe responder `PONG`.
 
 ### El Worker no muestra "Notificacion guardada..."
-- ¿Ejecutaste el Worker? Revisa que el comando `python app/worker.py` está corriendo en una terminal.
+- ¿Ejecutaste el Worker? Revisa que el comando `cd /workspace/backend && python -m app.worker` está corriendo en una terminal.
 - ¿El backend respondió con un `pedido_id`? Si no, hay error en FastAPI (revisa logs con `docker logs ...`).
 - ¿Esperaste ~2-3 segundos después de crear el pedido?
 
