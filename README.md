@@ -19,8 +19,8 @@ El flujo recomendado para usuarios externos es desplegar imágenes preconstruida
 ### 1. Definir imágenes y tag
 
 ```bash
-export BACKEND_IMAGE=ghcr.io/<owner>/<repo-backend>
-export FRONTEND_IMAGE=ghcr.io/<owner>/<repo-frontend>
+export BACKEND_IMAGE=ghcr.io/derekk8/eda-use-case-backend
+export FRONTEND_IMAGE=ghcr.io/derekk8/eda-use-case-frontend
 export IMAGE_TAG=latest
 ```
 
