@@ -86,9 +86,9 @@ En GitHub Actions (workflow **Publish Images to GHCR**) verás tags como:
 ### 2️. Definir imágenes y levantar el stack productivo
 
 ```bash
-export BACKEND_IMAGE=ghcr.io/<OWNER>/<REPO>-backend
-export FRONTEND_IMAGE=ghcr.io/<OWNER>/<REPO>-frontend
-export IMAGE_TAG=sha-<commit>
+export BACKEND_IMAGE=ghcr.io/derekk8/eda-use-case-backend
+export FRONTEND_IMAGE=ghcr.io/derekk8/eda-use-case-frontend
+export IMAGE_TAG=sha-13635d7
 
 docker compose -f docker-compose.prod.yml pull
 docker compose -f docker-compose.prod.yml up -d
