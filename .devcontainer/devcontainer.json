@@ -1,9 +1,19 @@
 {
   "name": "EDA Full Stack Dev Container",
   "dockerComposeFile": [
-    "docker-compose.yml"
+    "docker-compose.yml",
+    "../docker-compose.override.yml"
   ],
   "service": "backend-dev",
+  "runServices": [
+    "zookeeper",
+    "kafka",
+    "redis",
+    "backend-dev",
+    "frontend-dev",
+    "worker-dev"
+  ],
+  "shutdownAction": "stopCompose",
   "workspaceFolder": "/workspace",
   "forwardPorts": [5173, 8000],
   "customizations": {
