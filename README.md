@@ -76,14 +76,14 @@ Este repositorio publica imágenes en GHCR automáticamente cuando hay push a la
 - Docker Engine o Docker Desktop
 - Docker Compose v2
 
-### 1️⃣ Elegir el tag 
+### 1️. Elegir el tag 
 
 En GitHub Actions (workflow **Publish Images to GHCR**) verás tags como:
 
 - `latest` (último commit de `main`)
 - `sha-<commit>` 
 
-### 2️⃣ Definir imágenes y levantar el stack productivo
+### 2️. Definir imágenes y levantar el stack productivo
 
 ```bash
 export BACKEND_IMAGE=ghcr.io/<OWNER>/<REPO>-backend
@@ -103,7 +103,7 @@ Esto levanta:
 - Worker (consumer Kafka)
 - Frontend (Svelte servido por Nginx)
 
-### 3️⃣ Verificación rápida
+### 3️. Verificación rápida
 
 ```bash
 curl http://localhost:8000/health
