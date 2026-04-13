@@ -67,72 +67,77 @@ El patrón EDA desacopla los componentes de tu aplicación con eventos asíncró
 
 ---
 
-## Pasos para despliegue
+## Despliegue (GHCR)
+
+Este repositorio publica imágenes en GHCR automáticamente cuando hay push a la rama principal.
 
 ### Prerrequisitos
 
-- **Docker Desktop** (o Docker Engine + Docker Compose)
-- **Visual Studio Code** + extensión **Dev Containers**
-- **Git** (para clonar el repositorio)
+- Docker Engine o Docker Desktop
+- Docker Compose v2
 
-### 1️⃣ Abrir en Dev Container
+### 1️⃣ Elegir el tag 
 
-1. Abre este repositorio en VS Code
-2. Paleta de Comandos → `Dev Containers: Reopen in Container`
-3. Espera a que el contenedor se construya (`postCreateCommand` instala dependencias)
+En GitHub Actions (workflow **Publish Images to GHCR**) verás tags como:
+
+- `latest` (último commit de `main`)
+- `sha-<commit>` 
+
+### 2️⃣ Definir imágenes y levantar el stack productivo
 
 ```bash
-# Esto se ejecuta automáticamente
-pip install -r backend/requirements.txt  # Python deps
-cd frontend && npm install               # Node deps
+export BACKEND_IMAGE=ghcr.io/<OWNER>/<REPO>-backend
+export FRONTEND_IMAGE=ghcr.io/<OWNER>/<REPO>-frontend
+export IMAGE_TAG=sha-<commit>
+
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Esto levanta:
+
+- Zookeeper
+- Kafka
+- Redis
+- Backend (FastAPI)
+- Worker (consumer Kafka)
+- Frontend (Svelte servido por Nginx)
+
+### 3️⃣ Verificación rápida
+
+```bash
+curl http://localhost:8000/health
+curl http://localhost:8000/productos
+```
+
+Frontend: http://localhost:5173
+
+Para apagar:
+
+```bash
+docker compose -f docker-compose.prod.yml down
 ```
 
 ---
 
-### 2️⃣ Levantar infraestructura + backend + frontend
+## Desarrollo local (solo colaboradores)
 
-En una terminal del devcontainer:
+Los archivos en `.devcontainer/` y `docker-compose.override.yml` existen para desarrollo con hot reload dentro de VS Code Dev Containers. No son necesarios para evaluación ni despliegue.
+
+### Flujo de desarrollo con Dev Container
+
+1. Abrir el repositorio en VS Code.
+2. Ejecutar `Dev Containers: Reopen in Container`.
+3. Levantar servicios de desarrollo:
 
 ```bash
 docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.yml up -d
 ```
 
-Esto inicia en paralelo:
-- **Zookeeper** (orquestador de Kafka)
-- **Kafka** (message broker)
-- **Redis** (almacén de key-value)
-- **Backend FastAPI** (con hot reload via uvicorn)
-- **Frontend Vite** (npm install + npm run dev)
-
-**Espera ~20-30 segundos** a que Kafka inicialice completamente.
-
-Verificar que todo está corriendo:
-```bash
-curl http://localhost:8000/health
-# → {"status":"ok"}
-
-curl http://localhost:8000/productos
-# → lista de 4 productos del menú
-```
-
----
-
-### 3️⃣ Levantar el Worker manualmente
-
-**Abre una NUEVA terminal dentro del devcontainer** (no cierres la anterior) y ejecuta:
+4. En una segunda terminal, iniciar el worker manualmente:
 
 ```bash
 cd /workspace && python app/worker.py
-```
-
-**Esperarás ver:**
-```
-Worker iniciado, escuchando topic 'pedidos'...
-```
-
-El Worker ahora está escuchando eventos de Kafka continuamente. Cuando reciba un evento de pedido, imprimirá:
-```
-Notificacion guardada para pedido {uuid}
 ```
 
 ---
@@ -253,6 +258,8 @@ curl -X POST http://localhost:8000/pedidos \
 │
 ├── frontend/
 │   ├── package.json              ← Scripts y dependencias Node
+│   ├── Dockerfile                ← Imagen productiva del frontend
+│   ├── nginx.conf                ← Configuración SPA en Nginx
 │   ├── vite.config.js            ← Configuración Vite + Svelte
 │   ├── index.html                ← HTML root
 │   └── src/
@@ -260,13 +267,19 @@ curl -X POST http://localhost:8000/pedidos \
 │       └── App.svelte            ← Componente root (catálogo + carrito + consultas)
 │
 ├── backend/
-│   └── requirements.txt           ← Dependencias Python
+│   ├── requirements.txt           ← Dependencias Python
+│   └── Dockerfile                 ← Imagen productiva backend/worker
 │
 ├── .devcontainer/
 │   ├── devcontainer.json         ← Configuración VS Code Dev Container
-│   └── docker-compose.yml        ← Servicios de infraestructura (Kafka, Redis, etc.)
+│   └── docker-compose.yml        ← Compose base para entorno de colaboración
 │
-├── docker-compose.override.yml   ← Autoarranque backend + frontend
+├── .github/
+│   └── workflows/
+│       └── publish-ghcr.yml      ← CI/CD para publicar imágenes en GHCR
+├── docker-compose.override.yml   ← Override de desarrollo (Dev Containers)
+├── docker-compose.prod.yml       ← Orquestación productiva desde imágenes GHCR
+├── .dockerignore                 ← Exclusiones para build de imágenes
 └── README.md                     ← Este archivo
 ```
 
