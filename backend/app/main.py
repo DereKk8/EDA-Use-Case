@@ -1,13 +1,18 @@
-import uuid, logging
+import logging
+import uuid
+
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.models import PedidoCreate, Pedido, Producto
-from app.redis_client import guardar_pedido, obtener_pedido, obtener_notificacion
-from app.kafka_producer import start_producer, stop_producer, publicar_pedido
+
+from app.kafka_producer import publicar_pedido, start_producer, stop_producer
+from app.models import Pedido, PedidoCreate, Producto
+from app.redis_client import guardar_pedido, obtener_notificacion, obtener_pedido
 
 logging.basicConfig(level=logging.INFO)
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,13 +36,16 @@ CATALOGO = [
     Producto(id="prod-4", nombre="Ensalada César",      precio=12000),
 ]
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
 
+
 @app.get("/productos")
 async def listar_productos():
     return CATALOGO
+
 
 @app.post("/pedidos", status_code=201)
 async def crear_pedido(body: PedidoCreate):
@@ -51,6 +59,7 @@ async def crear_pedido(body: PedidoCreate):
     guardar_pedido(pedido)
     await publicar_pedido(pedido)
     return {"pedido_id": pedido.id, "estado": pedido.estado, "total": pedido.total}
+
 
 @app.get("/pedidos/{pedido_id}")
 async def consultar_pedido(pedido_id: str):

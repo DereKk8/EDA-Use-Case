@@ -1,40 +1,45 @@
-"""
-Configuración para conexión a servicios (Kafka, Redis).
-Soporta múltiples contextos: local, dev container, Docker.
-"""
-
 import os
-from typing import Dict, Any
+import socket
 
-def get_service_config() -> Dict[str, Any]:
-    """
-    Obtiene la configuración de servicios basada en el contexto de ejecución.
-    """
-    
-    # Variables de entorno (si el usuario las configura)
+
+DEFAULT_KAFKA_BOOTSTRAP = "localhost:9092"
+DEFAULT_REDIS_URL = "redis://localhost:6379"
+DOCKER_KAFKA_BOOTSTRAP = "kafka:29092"
+DOCKER_REDIS_URL = "redis://redis:6379"
+DEFAULT_PEDIDOS_TOPIC = "pedidos"
+
+
+def _running_in_docker_network() -> bool:
+    try:
+        socket.gethostbyname("kafka")
+        return True
+    except (socket.gaierror, OSError):
+        return False
+
+
+def get_service_config() -> dict[str, str]:
+    """Obtiene la configuración de Kafka y Redis según el contexto de ejecución."""
+
     env_kafka = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
     env_redis = os.getenv("REDIS_URL")
-    
+
     if env_kafka and env_redis:
-        # Usuario configuró variables de entorno
         return {
             "kafka_bootstrap": env_kafka,
             "redis_url": env_redis,
         }
-    
-    # Detectar contexto automáticamente
-    # Intentar resolver 'kafka' (dentro de red Docker)
-    import socket
-    try:
-        socket.gethostbyname("kafka")
-        # ✓ Estamos en la red Docker (dev container o dentro de docker-compose)
+
+    if _running_in_docker_network():
         return {
-            "kafka_bootstrap": "kafka:29092",
-            "redis_url": "redis://redis:6379",
+            "kafka_bootstrap": DOCKER_KAFKA_BOOTSTRAP,
+            "redis_url": DOCKER_REDIS_URL,
         }
-    except (socket.gaierror, OSError):
-        # ✗ No estamos en red Docker - intentar localhost
-        return {
-            "kafka_bootstrap": "localhost:9092",
-            "redis_url": "redis://localhost:6379",
-        }
+
+    return {
+        "kafka_bootstrap": DEFAULT_KAFKA_BOOTSTRAP,
+        "redis_url": DEFAULT_REDIS_URL,
+    }
+
+
+def get_kafka_topic() -> str:
+    return os.getenv("KAFKA_TOPIC_PEDIDOS", DEFAULT_PEDIDOS_TOPIC)

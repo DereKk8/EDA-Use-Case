@@ -1,13 +1,17 @@
-import os, json, logging
+import json
+import logging
+import os
+
 from aiokafka import AIOKafkaProducer
+
+from app.config import get_kafka_topic, get_service_config
 from app.models import Pedido
-from app.config import get_service_config
 
 logger = logging.getLogger(__name__)
 
-# Detectar contexto automáticamente (docker, dev container, localhost)
 config = get_service_config()
 KAFKA_BOOTSTRAP = os.getenv("KAFKA_BOOTSTRAP_SERVERS", config["kafka_bootstrap"])
+KAFKA_TOPIC = get_kafka_topic()
 
 producer: AIOKafkaProducer | None = None
 
@@ -28,5 +32,5 @@ async def stop_producer():
 async def publicar_pedido(pedido: Pedido) -> None:
     if not producer:
         raise RuntimeError("Producer no inicializado")
-    await producer.send_and_wait("pedidos", value=pedido.model_dump())
-    logger.info(f"Evento publicado para pedido {pedido.id}")
+    await producer.send_and_wait(KAFKA_TOPIC, value=pedido.model_dump())
+    logger.info("Evento publicado para pedido %s", pedido.id)

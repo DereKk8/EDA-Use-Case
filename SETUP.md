@@ -1,89 +1,39 @@
-#!/bin/bash
-# Script para el usuario - ejecutar en el HOST (no en VS Code)
+# Setup para contribuidores (Linux/macOS)
 
-echo ""
-echo "═══════════════════════════════════════════════════════════════════"
-echo "  INSTRUCCIONES PARA EJECUTAR EDA CORRECTAMENTE"
-echo "═══════════════════════════════════════════════════════════════════"
-echo ""
-echo "Este script debe ejecutarse en tu MÁQUINA LOCAL (HOST)"
-echo "NO dentro de VS Code"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 1: Verificar que Docker está corriendo"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
+Este documento es solo para desarrollo local. Para despliegue público usa [README.md](README.md).
 
-docker --version || { echo "❌ Docker NO instalado"; exit 1; }
-echo "✅ Docker instalado"
+## Requisitos
 
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 2: Ir a la carpeta del proyecto"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "Cambiate a la carpeta donde clonaste EDA-Use-Case:"
-echo "  cd /ruta/a/EDA-Use-Case"
-echo ""
+- Docker + Docker Compose v2
+- (Opcional) VS Code + Dev Containers
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 3: Levantar los servicios"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "Copia y ejecuta este comando:"
-echo ""
-echo "docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.yml up -d"
-echo ""
-echo "Espera 30 segundos..."
-echo ""
+## Levantar entorno de desarrollo
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 4: Verificar que está corriendo"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "Ejecuta:"
-echo "  docker ps"
-echo ""
-echo "Deberías ver contenedores con nombres como:"
-echo "  - kafka"
-echo "  - redis"
-echo "  - backend-dev"
-echo "  - frontend-dev"
-echo "  - zookeeper"
-echo ""
+```bash
+docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.yml up -d
+```
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 5: Abrir VS Code (Dev Container)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "En VS Code:"
-echo "  1. Paleta de comandos: Ctrl+Shift+P"
-echo "  2. Busca: 'Dev Containers: Reopen in Container'"
-echo "  3. Abre una terminal en VS Code (Ctrl+`)"
-echo ""
+Verifica estado:
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 6: Ejecutar el diagnóstico (en VS Code terminal)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "En la terminal de VS Code, ejecuta:"
-echo "  python diagnose.py"
-echo ""
-echo "Si ves ✅ en ambos (Kafka y Redis), continúa:"
-echo ""
+```bash
+docker ps
+```
 
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "PASO 7: Ejecutar el Worker (en VS Code terminal)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo ""
-echo "En la terminal de VS Code:"
-echo "  python -m app.worker"
-echo ""
-echo "Deberías ver:"
-echo "  Worker iniciado, escuchando topic 'pedidos'..."
-echo ""
+## Iniciar worker manualmente
 
-echo "═══════════════════════════════════════════════════════════════════"
-echo "  ✅ LISTO"
-echo "═══════════════════════════════════════════════════════════════════"
-echo ""
+```bash
+cd backend
+python -m app.worker
+```
+
+## Diagnóstico rápido
+
+```bash
+python diagnose.py
+```
+
+## Apagar entorno de desarrollo
+
+```bash
+docker compose -f .devcontainer/docker-compose.yml -f docker-compose.override.yml down
+```

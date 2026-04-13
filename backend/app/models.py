@@ -1,22 +1,25 @@
 from pydantic import BaseModel
-from typing import List
+
 
 class Producto(BaseModel):
     id: str
     nombre: str
     precio: float
 
+
 class PedidoCreate(BaseModel):
     cliente: str
-    productos: List[Producto]
+    productos: list[Producto]
+
 
 class Pedido(BaseModel):
     id: str
     cliente: str
-    productos: List[Producto]
+    productos: list[Producto]
     total: float
     estado: str = "pendiente"
     created_at: str
+
 
 class Notificacion(BaseModel):
     pedido_id: str

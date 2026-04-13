@@ -52,7 +52,7 @@ services:
 
   worker:
     image: ${BACKEND_IMAGE:?set BACKEND_IMAGE}:${IMAGE_TAG:-latest}
-    command: ["python", "app/worker.py"]
+    command: ["python", "-m", "app.worker"]
     depends_on:
       - kafka
       - redis

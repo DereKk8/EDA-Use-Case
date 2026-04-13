@@ -2,6 +2,7 @@
 .gitignore
 .devcontainer
 frontend/node_modules
+frontend/node_modules.root_owned.bak
 frontend/dist
 **/__pycache__
 **/*.pyc
